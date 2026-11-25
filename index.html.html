@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>REVERS KICKS | Catálogo</title>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    button, input { font-family: inherit; }
+
+    body {
+      background: #f4f3ef;
+      color: #111;
+      font-family: Helvetica, Arial, sans-serif;
+      line-height: 1.4;
+    }
+    body.bloqueado { overflow: hidden; }
+
+    /* ---------- CABECERA / LOGO ---------- */
+    header {
+      text-align: center;
+      padding: 28px 16px 20px;
+      border-bottom: 2px solid #111;
+    }
+    .logo img { max-width: 220px; width: 60%; height: auto; display: block; margin: 0 auto; }
+    /* Si no encuentra tu logo (img/logo.png), muestra el nombre en letras */
+    .logo-texto { display: none; }
+    .logo.sin-imagen .logo-texto { display: block; }
+    .logo.sin-imagen img { display: none; }
+    .revers {
+      display: block;
+      font-family: Impact, "Arial Black", Helvetica, sans-serif;
+      font-style: italic;
+      font-size: 54px;
+      letter-spacing: 1px;
+      line-height: 1;
+    }
+    .kicks {
+      display: block;
+      margin-top: 6px;
+      font-style: italic;
+      font-size: 14px;
+      letter-spacing: 6px;
+      font-weight: 700;
+    }
+
+    /* ---------- BOTÓN DEL CARRITO (siempre visible) ---------- */
+    .btn-carrito {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: #111;
+      color: #f4f3ef;
+      border: none;
+      cursor: pointer;
+      z-index: 9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-carrito svg { width: 26px; height: 26px; }
+    .btn-carrito .contador {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      min-width: 22px;
+      height: 22px;
+      padding: 0 5px;
+      border-radius: 11px;
+      background: #1faa59;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-carrito .contador.visible { display: flex; }
+
+    /* ---------- BUSCADOR Y FILTROS ---------- */
+    .buscador { max-width: 420px; margin: 20px auto 0; padding: 0 16px; }
+    .buscador input {
+      width: 100%;
+      padding: 12px 14px;
+      background: #fff;
+      border: 1px solid #111;
+      font-size: 14px;
+      outline: none;
+    }
+    .filtros {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 16px 16px 4px;
+    }
+    .filtros button {
+      background: transparent;
+      color: #111;
+      border: 1px solid #111;
+      padding: 9px 18px;
+      font-size: 12px;
+      letter-spacing: 2px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .filtros button.activo { background: #111; color: #f4f3ef; }
+
+    /* ---------- CATÁLOGO ---------- */
+    /* Celular: 2 columnas. Computadora: 3 columnas. Mismo estilo en ambos. */
+    .catalogo {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px 16px 48px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    @media (min-width: 800px) {
+      .catalogo { grid-template-columns: repeat(3, 1fr); gap: 24px; padding-top: 28px; }
+    }
+    .vacio { grid-column: 1 / -1; text-align: center; color: #6b6b6b; padding: 40px 0; }
+
+    .tarjeta {
+      background: none;
+      border: none;
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+    .tarjeta .marca { margin-top: 10px; font-size: 11px; letter-spacing: 2px; color: #6b6b6b; }
+    .tarjeta .nombre { margin-top: 2px; font-size: 14px; letter-spacing: 1px; font-weight: 700; }
+    .tarjeta .precio { margin-top: 2px; font-size: 15px; }
+    .tarjeta:hover .imagen { border-color: #111; }
+
+    /* ---------- IMÁGENES (con aviso si falta la foto) ---------- */
+    .imagen {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #fff;
+      border: 1px solid #d6d3ca;
+      overflow: hidden;
+    }
+    .imagen img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .imagen.sin-foto::after {
+      content: attr(data-etiqueta);
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 12px;
+      color: #9a9890;
+      font-size: 12px;
+      letter-spacing: 2px;
+    }
+
+    /* ---------- VENTANAS (producto y carrito) ---------- */
+    .fondo {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      z-index: 10;
+    }
+    .fondo.abierto { display: flex; }
+
+    .ventana {
+      position: relative;
+      width: 100%;
+      max-width: 950px;
+      max-height: 94vh;
+      overflow-y: auto;
+      background: #f4f3ef;
+      border: 2px solid #111;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    @media (min-width: 800px) {
+      .ventana { grid-template-columns: 1.1fr 1fr; gap: 36px; padding: 32px; }
+    }
+
+    .cerrar {
+      position: absolute;
+      top: 6px;
+      right: 12px;
+      background: none;
+      border: none;
+      color: #111;
+      font-size: 30px;
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    .miniaturas { display: flex; gap: 10px; margin-top: 10px; }
+    .miniaturas button {
+      flex: 1;
+      max-width: 80px;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+    }
+    .miniaturas button.activa .imagen { border-color: #111; border-width: 2px; }
+    .miniaturas .imagen.sin-foto::after { font-size: 10px; letter-spacing: 0; }
+
+    .datos .marca { font-size: 12px; letter-spacing: 3px; color: #6b6b6b; padding-right: 24px; }
+    .datos h2 { margin-top: 4px; font-size: 24px; letter-spacing: 1px; font-weight: 800; padding-right: 24px; }
+    .datos .precio { margin-top: 8px; font-size: 22px; }
+    .datos .descripcion { margin-top: 14px; font-size: 14px; color: #4a4a4a; }
+    .datos h3 {
+      margin-top: 26px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      letter-spacing: 3px;
+      font-weight: 700;
+    }
+
+    .tallas { display: flex; flex-wrap: wrap; gap: 10px; }
+    .tallas button {
+      width: 56px;
+      height: 48px;
+      background: transparent;
+      color: #111;
+      border: 1px solid #111;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .tallas button.elegida { background: #111; color: #f4f3ef; }
+
+    /* Botones grandes */
+    .boton {
+      display: block;
+      width: 100%;
+      margin-top: 12px;
+      padding: 16px;
+      font-size: 14px;
+      letter-spacing: 3px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 2px solid #111;
+    }
+    .boton.negro { background: #111; color: #f4f3ef; }
+    .boton.contorno { background: transparent; color: #111; }
+    .boton.verde { background: #1faa59; color: #fff; border-color: #1faa59; }
+    .boton.chico { padding: 10px; font-size: 12px; }
+    .datos .boton:first-of-type { margin-top: 26px; }
+    .mensaje { margin-top: 10px; min-height: 20px; font-size: 13px; color: #b3412a; }
+
+    /* ---------- CARRITO (panel a la derecha) ---------- */
+    .fondo.lado { justify-content: flex-end; align-items: stretch; padding: 0; z-index: 11; }
+    .panel {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      height: 100%;
+      background: #f4f3ef;
+      border-left: 2px solid #111;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel h2 {
+      padding: 20px 56px 16px 20px;
+      font-size: 18px;
+      letter-spacing: 4px;
+      border-bottom: 2px solid #111;
+    }
+    .lista-carrito { flex: 1; overflow-y: auto; padding: 8px 20px; }
+    .carrito-vacio { text-align: center; color: #6b6b6b; padding: 48px 0; font-size: 14px; }
+
+    .item {
+      display: grid;
+      grid-template-columns: 64px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid #d6d3ca;
+    }
+    .item .imagen { width: 64px; }
+    .item .imagen.sin-foto::after { font-size: 9px; letter-spacing: 0; padding: 2px; }
+    .item .info .n { font-size: 13px; font-weight: 700; letter-spacing: 1px; }
+    .item .info .t { font-size: 12px; color: #6b6b6b; margin-top: 2px; }
+    .item .info .p { font-size: 14px; margin-top: 4px; }
+    .item .cantidad { display: flex; align-items: center; gap: 4px; margin-top: 8px; }
+    .item .cantidad button {
+      width: 28px;
+      height: 28px;
+      background: transparent;
+      border: 1px solid #111;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .item .cantidad span { min-width: 24px; text-align: center; font-size: 14px; }
+    .item .quitar {
+      background: none;
+      border: none;
+      color: #b3412a;
+      font-size: 12px;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .pie-carrito { padding: 16px 20px 20px; border-top: 2px solid #111; }
+    .total { display: flex; justify-content: space-between; font-size: 18px; font-weight: 700; }
+    .pie-carrito .boton:first-of-type { margin-top: 14px; }
+    .vaciar {
+      display: block;
+      margin: 12px auto 0;
+      background: none;
+      border: none;
+      color: #6b6b6b;
+      font-size: 12px;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    /* Aviso corto: "Agregado al carrito" */
+    .aviso {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111;
+      color: #f4f3ef;
+      padding: 12px 20px;
+      font-size: 13px;
+      letter-spacing: 1px;
+      z-index: 20;
+      display: none;
+    }
+    .aviso.visible { display: block; }
+
+    footer {
+      text-align: center;
+      padding: 24px 16px 36px;
+      border-top: 2px solid #111;
+      font-size: 12px;
+      color: #6b6b6b;
+      letter-spacing: 2px;
+    }
+    footer a { color: #111; font-weight: 700; text-decoration: none; }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="logo" id="logo">
+      <img src="img/logo.png" alt="REVERS KICKS" id="logoImg">
+      <div class="logo-texto">
+        <span class="revers">REVERS</span>
+        <span class="kicks">KICKS</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Botón del carrito -->
+  <button class="btn-carrito" id="btnCarrito" aria-label="Abrir carrito">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="9" cy="20" r="1.5"></circle>
+      <circle cx="18" cy="20" r="1.5"></circle>
+      <path d="M2 3h3l2.6 12.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L20.5 8H6"></path>
+    </svg>
+    <span class="contador" id="contador">0</span>
+  </button>
+
+  <div class="buscador"><input type="search" id="buscar" placeholder="Buscar zapatillas..."></div>
+  <div class="filtros" id="filtros"></div>
+  <main class="catalogo" id="catalogo"></main>
+
+  <footer>
+    <p>REVERS KICKS</p>
+    <p id="redes" style="margin-top:8px"></p>
+  </footer>
+
+  <!-- Ventana de la zapatilla -->
+  <div class="fondo" id="fondo">
+    <div class="ventana">
+      <button class="cerrar" id="cerrar" aria-label="Cerrar">&times;</button>
+      <section>
+        <div class="imagen" id="fotoGrande"></div>
+        <div class="miniaturas" id="miniaturas"></div>
+      </section>
+      <section class="datos">
+        <p class="marca" id="pMarca"></p>
+        <h2 id="pNombre"></h2>
+        <p class="precio" id="pPrecio"></p>
+        <p class="descripcion" id="pDescripcion"></p>
+        <h3>ELIGE TU TALLA</h3>
+        <div class="tallas" id="pTallas"></div>
+        <button class="boton contorno" id="btnAgregar">AGREGAR AL CARRITO</button>
+        <button class="boton verde" id="btnPedir">ENVIAR A WHATSAPP</button>
+        <p class="mensaje" id="mensaje"></p>
+      </section>
+    </div>
+  </div>
+
+  <!-- Ventana del carrito -->
+  <div class="fondo lado" id="fondoCarrito">
+    <div class="panel">
+      <button class="cerrar" id="cerrarCarrito" aria-label="Cerrar carrito">&times;</button>
+      <h2>TU CARRITO</h2>
+      <div class="lista-carrito" id="listaCarrito"></div>
+      <div class="pie-carrito" id="pieCarrito">
+        <div class="total"><span>TOTAL</span><span id="totalCarrito"></span></div>
+        <button class="boton verde" id="btnEnviarCarrito">ENVIAR PEDIDO POR WHATSAPP</button>
+        <button class="boton contorno chico" id="btnSeguir">SEGUIR COMPRANDO</button>
+        <button class="vaciar" id="btnVaciar">Vaciar carrito</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="aviso" id="aviso"></div>
+
+  <script>
+    /* =====================================================
+       AQUÍ CAMBIAS TUS DATOS (solo toca esta parte)
+       ===================================================== */
+
+    // Tu número de WhatsApp, con código de país y sin + ni espacios.
+    // Perú = 51. Ejemplo: 51987654321
+    const WHATSAPP = "51999999999";
+
+    // Símbolo de moneda
+    const MONEDA = "S/";
+
+    // Tu Instagram y TikTok (déjalos vacíos "" si no quieres mostrarlos)
+    const INSTAGRAM = "";   // ejemplo: "https://instagram.com/tumarca"
+    const TIKTOK    = "";   // ejemplo: "https://tiktok.com/@tumarca"
+
+    // Tallas: de la 39 a la 44
+    const TALLA_INICIO = 39;
+    const TALLA_FIN    = 44;
+
+    // TU LOGO: guarda tu logo como  img/logo.png  (carpeta "img" junto a este archivo).
+    // Mientras no esté, se muestra el nombre REVERS KICKS en letras.
+
+    // TUS ZAPATILLAS
+    // Para agregar una: copia un bloque { ... }, pégalo y cambia los datos.
+    // IMPORTANTE: el precio va solo con número (sin S/ y sin comillas), así el carrito puede sumar.
+    // Cada "nombre" debe ser distinto.
+    // Las fotos van en la carpeta "img" junto a este archivo.
+    // La primera foto de la lista es la que se ve en el catálogo.
+    // "categoria" crea los botones de filtro solos.
+    // "marca" es opcional (puedes borrar esa línea).
+    // Si una zapatilla usa otras tallas, agrega:  tallas: [36, 37, 38]
+    const PRODUCTOS = [
+      {
+        marca: "MARCA",
+        nombre: "LOW CLASSIC NEGRO / BLANCO",
+        categoria: "Low",
+        precio: 250,
+        descripcion: "Zapatilla de corte bajo, cuero sintético, suela de goma.",
+        imagenes: ["img/low-negro-1.jpg", "img/low-negro-2.jpg", "img/low-negro-3.jpg"]
+      },
+      {
+        marca: "MARCA",
+        nombre: "LOW CLASSIC BLANCO",
+        categoria: "Low",
+        precio: 250,
+        descripcion: "Zapatilla de corte bajo, color blanco total.",
+        imagenes: ["img/low-blanco-1.jpg", "img/low-blanco-2.jpg"]
+      },
+      {
+        marca: "MARCA",
+        nombre: "HIGH RETRO ROJO",
+        categoria: "High",
+        precio: 320,
+        descripcion: "Zapatilla de caña alta, estilo retro.",
+        imagenes: ["img/high-rojo-1.jpg", "img/high-rojo-2.jpg"]
+      },
+      {
+        marca: "MARCA",
+        nombre: "HIGH RETRO NEGRO",
+        categoria: "High",
+        precio: 320,
+        descripcion: "Zapatilla de caña alta, estilo retro.",
+        imagenes: ["img/high-negro-1.jpg", "img/high-negro-2.jpg"]
+      },
+      {
+        marca: "MARCA",
+        nombre: "RUNNER GRIS",
+        categoria: "Running",
+        precio: 280,
+        descripcion: "Zapatilla ligera para uso diario.",
+        imagenes: ["img/runner-gris-1.jpg", "img/runner-gris-2.jpg"]
+      },
+      {
+        marca: "MARCA",
+        nombre: "SKATE CANVAS",
+        categoria: "Skate",
+        precio: 180,
+        descripcion: "Zapatilla de lona, suela vulcanizada.",
+        imagenes: ["img/skate-1.jpg", "img/skate-2.jpg"]
+      }
+    ];
+
+    /* =====================================================
+       DE AQUÍ PARA ABAJO NO HACE FALTA CAMBIAR NADA
+       ===================================================== */
+
+    var CLAVE_CARRITO = "reversKicksCarrito";
+    var filtroActual = "Todo";
+    var textoBusqueda = "";
+    var productoActual = null;
+    var tallaElegida = null;
+    var carrito = cargarCarrito();   // lista de { nombre, talla, cantidad }
+
+    var elCatalogo = document.getElementById("catalogo");
+    var elFiltros  = document.getElementById("filtros");
+    var elFondo    = document.getElementById("fondo");
+    var elFoto     = document.getElementById("fotoGrande");
+    var elMinis    = document.getElementById("miniaturas");
+    var elTallas   = document.getElementById("pTallas");
+    var elMensaje  = document.getElementById("mensaje");
+    var elFondoCarrito = document.getElementById("fondoCarrito");
+    var elListaCarrito = document.getElementById("listaCarrito");
+    var elAviso    = document.getElementById("aviso");
+
+    function dinero(n) { return MONEDA + " " + n; }
+
+    // Logo: si no existe la imagen, se muestra el nombre en letras
+    document.getElementById("logoImg").onerror = function () {
+      document.getElementById("logo").classList.add("sin-imagen");
+    };
+
+    // Pone una foto dentro de un contenedor; si no existe, muestra un aviso
+    function ponerImagen(contenedor, ruta, etiqueta) {
+      contenedor.innerHTML = "";
+      contenedor.dataset.etiqueta = etiqueta;
+      contenedor.classList.remove("sin-foto");
+      var img = new Image();
+      img.alt = etiqueta;
+      img.onerror = function () { contenedor.classList.add("sin-foto"); img.remove(); };
+      img.src = ruta;
+      contenedor.appendChild(img);
+    }
+
+    // Lista de tallas de un producto
+    function tallasDe(p) {
+      if (p.tallas) return p.tallas;
+      var lista = [];
+      for (var t = TALLA_INICIO; t <= TALLA_FIN; t++) lista.push(t);
+      return lista;
+    }
+
+    function buscarProducto(nombre) {
+      for (var i = 0; i < PRODUCTOS.length; i++) {
+        if (PRODUCTOS[i].nombre === nombre) return PRODUCTOS[i];
+      }
+      return null;
+    }
+
+    function mostrarAviso(texto) {
+      elAviso.textContent = texto;
+      elAviso.classList.add("visible");
+      clearTimeout(mostrarAviso.reloj);
+      mostrarAviso.reloj = setTimeout(function () { elAviso.classList.remove("visible"); }, 1800);
+    }
+
+    /* ---------- Filtros ---------- */
+    function dibujarFiltros() {
+      var categorias = ["Todo"];
+      PRODUCTOS.forEach(function (p) {
+        if (categorias.indexOf(p.categoria) === -1) categorias.push(p.categoria);
+      });
+      elFiltros.innerHTML = "";
+      categorias.forEach(function (c) {
+        var b = document.createElement("button");
+        b.textContent = c.toUpperCase();
+        if (c === filtroActual) b.className = "activo";
+        b.onclick = function () { filtroActual = c; dibujarFiltros(); dibujarCatalogo(); };
+        elFiltros.appendChild(b);
+      });
+    }
+
+    /* ---------- Catálogo ---------- */
+    function dibujarCatalogo() {
+      elCatalogo.innerHTML = "";
+      var mostrados = 0;
+
+      PRODUCTOS.forEach(function (p) {
+        if (filtroActual !== "Todo" && p.categoria !== filtroActual) return;
+        var texto = (p.nombre + " " + (p.marca || "")).toLowerCase();
+        if (textoBusqueda && texto.indexOf(textoBusqueda) === -1) return;
+        mostrados++;
+
+        var tarjeta = document.createElement("button");
+        tarjeta.className = "tarjeta";
+
+        var foto = document.createElement("div");
+        foto.className = "imagen";
+        ponerImagen(foto, p.imagenes[0], p.nombre);
+        tarjeta.appendChild(foto);
+
+        if (p.marca) {
+          var marca = document.createElement("p");
+          marca.className = "marca";
+          marca.textContent = p.marca;
+          tarjeta.appendChild(marca);
+        }
+
+        var nombre = document.createElement("p");
+        nombre.className = "nombre";
+        nombre.textContent = p.nombre;
+        tarjeta.appendChild(nombre);
+
+        var precio = document.createElement("p");
+        precio.className = "precio";
+        precio.textContent = dinero(p.precio);
+        tarjeta.appendChild(precio);
+
+        tarjeta.onclick = function () { abrirProducto(p); };
+        elCatalogo.appendChild(tarjeta);
+      });
+
+      if (mostrados === 0) {
+        var vacio = document.createElement("p");
+        vacio.className = "vacio";
+        vacio.textContent = "No encontramos zapatillas con esa búsqueda.";
+        elCatalogo.appendChild(vacio);
+      }
+    }
+
+    document.getElementById("buscar").oninput = function (e) {
+      textoBusqueda = e.target.value.trim().toLowerCase();
+      dibujarCatalogo();
+    };
+
+    /* ---------- Ventana de la zapatilla ---------- */
+    function mostrarFoto(indice) {
+      ponerImagen(elFoto, productoActual.imagenes[indice], productoActual.nombre);
+      var botones = elMinis.querySelectorAll("button");
+      botones.forEach(function (b, i) { b.classList.toggle("activa", i === indice); });
+    }
+
+    function abrirProducto(p) {
+      productoActual = p;
+      tallaElegida = null;
+      elMensaje.textContent = "";
+
+      document.getElementById("pMarca").textContent = p.marca || "";
+      document.getElementById("pNombre").textContent = p.nombre;
+      document.getElementById("pPrecio").textContent = dinero(p.precio);
+      document.getElementById("pDescripcion").textContent = p.descripcion;
+
+      elMinis.innerHTML = "";
+      p.imagenes.forEach(function (ruta, i) {
+        var b = document.createElement("button");
+        var cont = document.createElement("div");
+        cont.className = "imagen";
+        ponerImagen(cont, ruta, "Foto " + (i + 1));
+        b.appendChild(cont);
+        b.onclick = function () { mostrarFoto(i); };
+        elMinis.appendChild(b);
+      });
+      mostrarFoto(0);
+
+      elTallas.innerHTML = "";
+      tallasDe(p).forEach(function (t) {
+        var b = document.createElement("button");
+        b.textContent = t;
+        b.onclick = function () {
+          tallaElegida = t;
+          elMensaje.textContent = "";
+          elTallas.querySelectorAll("button").forEach(function (x) { x.classList.remove("elegida"); });
+          b.classList.add("elegida");
+        };
+        elTallas.appendChild(b);
+      });
+
+      elFondo.classList.add("abierto");
+      document.body.classList.add("bloqueado");
+    }
+
+    function cerrarProducto() {
+      elFondo.classList.remove("abierto");
+      actualizarBloqueo();
+    }
+
+    function actualizarBloqueo() {
+      var abierto = elFondo.classList.contains("abierto") || elFondoCarrito.classList.contains("abierto");
+      document.body.classList.toggle("bloqueado", abierto);
+    }
+
+    document.getElementById("cerrar").onclick = cerrarProducto;
+    elFondo.onclick = function (e) { if (e.target === elFondo) cerrarProducto(); };
+
+    // Botón verde: enviar SOLO esta zapatilla por WhatsApp
+    document.getElementById("btnPedir").onclick = function () {
+      if (tallaElegida === null) { elMensaje.textContent = "Elige una talla primero."; return; }
+      var texto = "Hola, quiero pedir:\n" +
+                  productoActual.nombre + " - Talla " + tallaElegida + "\n" +
+                  "Precio: " + dinero(productoActual.precio);
+      abrirWhatsApp(texto);
+    };
+
+    // Botón agregar al carrito
+    document.getElementById("btnAgregar").onclick = function () {
+      if (tallaElegida === null) { elMensaje.textContent = "Elige una talla primero."; return; }
+      agregarAlCarrito(productoActual.nombre, tallaElegida);
+      cerrarProducto();
+      mostrarAviso("Agregado al carrito ✓");
+    };
+
+    /* ---------- Carrito ---------- */
+    function cargarCarrito() {
+      try {
+        var datos = localStorage.getItem(CLAVE_CARRITO);
+        return datos ? JSON.parse(datos) : [];
+      } catch (e) { return []; }
+    }
+
+    function guardarCarrito() {
+      try { localStorage.setItem(CLAVE_CARRITO, JSON.stringify(carrito)); } catch (e) {}
+    }
+
+    // Quita del carrito lo que ya no exista en la lista de productos
+    carrito = carrito.filter(function (x) { return buscarProducto(x.nombre); });
+
+    function agregarAlCarrito(nombre, talla) {
+      var existente = null;
+      carrito.forEach(function (x) { if (x.nombre === nombre && x.talla === talla) existente = x; });
+      if (existente) existente.cantidad++;
+      else carrito.push({ nombre: nombre, talla: talla, cantidad: 1 });
+      guardarCarrito();
+      actualizarContador();
+    }
+
+    function totalCarrito() {
+      var total = 0;
+      carrito.forEach(function (x) { total += buscarProducto(x.nombre).precio * x.cantidad; });
+      return total;
+    }
+
+    function actualizarContador() {
+      var cantidad = 0;
+      carrito.forEach(function (x) { cantidad += x.cantidad; });
+      var c = document.getElementById("contador");
+      c.textContent = cantidad;
+      c.classList.toggle("visible", cantidad > 0);
+    }
+
+    function dibujarCarrito() {
+      elListaCarrito.innerHTML = "";
+      var hayProductos = carrito.length > 0;
+      document.getElementById("pieCarrito").style.display = hayProductos ? "block" : "none";
+
+      if (!hayProductos) {
+        var vacio = document.createElement("p");
+        vacio.className = "carrito-vacio";
+        vacio.textContent = "Tu carrito está vacío.";
+        elListaCarrito.appendChild(vacio);
+        return;
+      }
+
+      carrito.forEach(function (x, i) {
+        var p = buscarProducto(x.nombre);
+
+        var fila = document.createElement("div");
+        fila.className = "item";
+
+        var foto = document.createElement("div");
+        foto.className = "imagen";
+        ponerImagen(foto, p.imagenes[0], p.nombre);
+
+        var info = document.createElement("div");
+        info.className = "info";
+        info.innerHTML = '<p class="n"></p><p class="t"></p><p class="p"></p>';
+        info.querySelector(".n").textContent = p.nombre;
+        info.querySelector(".t").textContent = "Talla " + x.talla;
+        info.querySelector(".p").textContent = dinero(p.precio * x.cantidad);
+
+        var cantidad = document.createElement("div");
+        cantidad.className = "cantidad";
+        var menos = document.createElement("button");
+        menos.textContent = "−";
+        menos.onclick = function () {
+          x.cantidad--;
+          if (x.cantidad <= 0) carrito.splice(i, 1);
+          cambioEnCarrito();
+        };
+        var num = document.createElement("span");
+        num.textContent = x.cantidad;
+        var mas = document.createElement("button");
+        mas.textContent = "+";
+        mas.onclick = function () { x.cantidad++; cambioEnCarrito(); };
+        cantidad.appendChild(menos);
+        cantidad.appendChild(num);
+        cantidad.appendChild(mas);
+        info.appendChild(cantidad);
+
+        var quitar = document.createElement("button");
+        quitar.className = "quitar";
+        quitar.textContent = "Quitar";
+        quitar.onclick = function () { carrito.splice(i, 1); cambioEnCarrito(); };
+
+        fila.appendChild(foto);
+        fila.appendChild(info);
+        fila.appendChild(quitar);
+        elListaCarrito.appendChild(fila);
+      });
+
+      document.getElementById("totalCarrito").textContent = dinero(totalCarrito());
+    }
+
+    function cambioEnCarrito() {
+      guardarCarrito();
+      actualizarContador();
+      dibujarCarrito();
+    }
+
+    function abrirCarrito() {
+      dibujarCarrito();
+      elFondoCarrito.classList.add("abierto");
+      document.body.classList.add("bloqueado");
+    }
+
+    function cerrarCarrito() {
+      elFondoCarrito.classList.remove("abierto");
+      actualizarBloqueo();
+    }
+
+    document.getElementById("btnCarrito").onclick = abrirCarrito;
+    document.getElementById("cerrarCarrito").onclick = cerrarCarrito;
+    document.getElementById("btnSeguir").onclick = cerrarCarrito;
+    elFondoCarrito.onclick = function (e) { if (e.target === elFondoCarrito) cerrarCarrito(); };
+
+    document.getElementById("btnVaciar").onclick = function () {
+      carrito = [];
+      cambioEnCarrito();
+    };
+
+    // Botón verde del carrito: enviar todo el pedido por WhatsApp
+    document.getElementById("btnEnviarCarrito").onclick = function () {
+      if (carrito.length === 0) return;
+      var lineas = ["Hola, quiero hacer este pedido:", ""];
+      carrito.forEach(function (x, i) {
+        var p = buscarProducto(x.nombre);
+        lineas.push((i + 1) + ". " + p.nombre + " - Talla " + x.talla +
+                    " x" + x.cantidad + " - " + dinero(p.precio * x.cantidad));
+      });
+      lineas.push("");
+      lineas.push("Total: " + dinero(totalCarrito()));
+      abrirWhatsApp(lineas.join("\n"));
+    };
+
+    function abrirWhatsApp(texto) {
+      window.open("https://wa.me/" + WHATSAPP + "?text=" + encodeURIComponent(texto), "_blank");
+    }
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") { cerrarProducto(); cerrarCarrito(); }
+    });
+
+    /* ---------- Redes ---------- */
+    (function () {
+      var cont = document.getElementById("redes");
+      var partes = [];
+      if (INSTAGRAM) partes.push('<a href="' + INSTAGRAM + '" target="_blank">INSTAGRAM</a>');
+      if (TIKTOK) partes.push('<a href="' + TIKTOK + '" target="_blank">TIKTOK</a>');
+      cont.innerHTML = partes.join(" &nbsp;·&nbsp; ");
+    })();
+
+    /* ---------- Iniciar ---------- */
+    dibujarFiltros();
+    dibujarCatalogo();
+    actualizarContador();
+  </script>
+
+</body>
+</html>
